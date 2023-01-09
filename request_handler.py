@@ -2,7 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from views import get_all_metals, get_all_orders, get_all_sizes, get_all_styles
 from views import get_single_style, get_single_size, get_single_metal, get_single_order
-from views import create_order
+from views import create_order, delete_order, update_order
 
 
 class HandleRequests(BaseHTTPRequestHandler):
@@ -105,8 +105,22 @@ class HandleRequests(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(new_order).encode())
 
     def do_PUT(self):
-        """Handles PUT requests to the server """
-        self.do_POST()
+        """Handles PUT requests to the server
+        """
+        self._set_headers(204)
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        # Delete a single order from the list
+        if resource == "orders":
+            update_order(id, post_body)
+
+        # Encode the new order and send in response
+        self.wfile.write("".encode())
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin
@@ -129,7 +143,21 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept')
         self.end_headers()
 
+    def do_DELETE(self):
+        """Deletes dictionary from database
+        """
+        # Set a 204 response code
+        self._set_headers(204)
 
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        # Delete a single animal from the list
+        if resource == "orders":
+            delete_order(id)
+
+        # Encode the new item and send in response
+        self.wfile.write("".encode())
 
 # point of this application.
 def main():
