@@ -60,3 +60,12 @@ INSERT INTO `Orders` VALUES (null, 4, 2, 1);
 INSERT INTO `Orders` VALUES (null, 5, 3, 2);
 
 SELECT * FROM `Orders`
+
+SELECT
+    o.size_id,
+    o.style_id,
+    o.metal_id,
+    m.metal,
+    m.price
+FROM `Orders` o
+JOIN `Metals` m ON m.id = o.metal_id

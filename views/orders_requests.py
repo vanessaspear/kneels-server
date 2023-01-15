@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from models import Order
+from models import Order, Size, Metal, Style
 
 def get_all_orders():
     """Returns all order dictionaries"""
@@ -13,8 +13,20 @@ def get_all_orders():
             o.id,
             o.metal_id,
             o.style_id,
-            o.size_id
+            o.size_id,
+            m.metal,
+            m.price metal_price,
+            s.style,
+            s.price style_price,
+            sz.carets,
+            sz.price size_price
         FROM orders o
+        JOIN metals m 
+            ON m.id = o.metal_id
+        JOIN styles s 
+            ON s.id = o.style_id
+        JOIN sizes sz 
+            ON sz.id = o.size_id
         """)
 
         orders = []
@@ -22,8 +34,13 @@ def get_all_orders():
         dataset = db_cursor.fetchall()
 
         for row in dataset:
-            order = Order(row['id'], row['metal_id'], row['style_id'],
-                            row['size_id'])
+            order = Order(row['id'], row['metal_id'], row['style_id'], row['size_id'])
+            metal = Metal(row['metal_id'], row['metal'], row['metal_price'])
+            order.metal = metal.__dict__
+            style = Style(row['style_id'], row['style'], row['style_price'])
+            order.style = style.__dict__
+            size = Size(row['size_id'], row['carets'], row['size_price'])
+            order.size = size.__dict__
 
             orders.append(order.__dict__)
 
@@ -85,19 +102,13 @@ def delete_order(id):
     Args:
         id (int): Order id
     """
-    # Initial -1 value for order index, in case one isn't found
-    order_index = -1
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    # Iterate the ORDERS list, but use enumerate() so that you
-    # can access the index value of each item
-    for index, order in enumerate(ORDERS):
-        if order["id"] == id:
-            # Found the order. Store the current index.
-            order_index = index
-
-    # If the order was found, use pop(int) to remove it from list
-    if order_index >= 0:
-        ORDERS.pop(order_index)
+        db_cursor.execute("""
+        DELETE FROM orders
+        WHERE id = ?
+        """, (id, ))
 
 def update_order(id, new_order):
     """Iterate order list

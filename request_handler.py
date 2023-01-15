@@ -2,7 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from views import get_all_metals, get_all_orders, get_all_sizes, get_all_styles
 from views import get_single_style, get_single_size, get_single_metal, get_single_order
-from views import create_order, delete_order, update_order
+from views import create_order, delete_order, update_order, update_metal
 
 
 class HandleRequests(BaseHTTPRequestHandler):
@@ -72,8 +72,6 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         self.wfile.write(json.dumps(response).encode())
 
-    # Here's a method on the class that overrides the parent's method.
-    # It handles any POST request.
     def do_POST(self):
         """Handles POST requests to the server"""
 
@@ -81,19 +79,13 @@ class HandleRequests(BaseHTTPRequestHandler):
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
 
-        # Convert JSON string to a Python dictionary
         post_body = json.loads(post_body)
 
-        # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
-        # Add a new order to the list
         if resource == "orders":
-            # Initialize new order
             new_order = None
             new_order = create_order(post_body)
-
-            # Encode the new order and send in response
             self.wfile.write(json.dumps(new_order).encode())
 
     def do_PUT(self):
@@ -104,14 +96,21 @@ class HandleRequests(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
 
-        # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
-        # Delete a single order from the list
+        success = False
+
         if resource == "orders":
             update_order(id, post_body)
 
-        # Encode the new order and send in response
+        if resource == "metals":
+            success = update_metal(id, post_body)
+        
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
         self.wfile.write("".encode())
 
     def _set_headers(self, status):
