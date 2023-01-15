@@ -1,34 +1,59 @@
-ORDERS = [
-    {
-        "id": 1,
-        "metalId": 1,
-        "sizeId": 2,
-        "styleId": 1
-    }
-]
+import json
+import sqlite3
+from models import Order
 
 def get_all_orders():
     """Returns all order dictionaries"""
-    return ORDERS
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            o.id,
+            o.metal_id,
+            o.style_id,
+            o.size_id
+        FROM orders o
+        """)
+
+        orders = []
+
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            order = Order(row['id'], row['metal_id'], row['style_id'],
+                            row['size_id'])
+
+            orders.append(order.__dict__)
+
+    return orders
 
 # Function with a single parameter
 def get_single_order(id):
     """"Returns a single order by provided id
     """
-    # Variable to hold the found order, if it exists
-    requested_order = None
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
 
-    # Iterate the ORDERS list above. Very similar to the
-    # for..of loops you used in JavaScript.
-    for order in ORDERS:
-        # Dictionaries in Python use [] notation to find a key
-        # instead of the dot notation that JavaScript used.
-        if order["id"] == id:
-            requested_order = order
+        db_cursor.execute("""
+        SELECT
+            o.id,
+            o.metal_id,
+            o.style_id,
+            o.size_id
+        FROM orders o
+        WHERE o.id = ?
+        """, ( id, ))
 
-    return requested_order
+        data = db_cursor.fetchone()
 
-def create_order(order):
+        order = Order(data['id'], data['metal_id'], data['style_id'], data['size_id'])
+
+        return order.__dict__
+
+def create_order(new_order):
     """Adds a new order dictionary
 
     Args:
@@ -37,20 +62,22 @@ def create_order(order):
     Returns:
         dictionary: Returns the order dictionary with an ORDER id
     """
-    # Get the id value of the last order in the list
-    max_id = ORDERS[-1]["id"]
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    # Add 1 to whatever that number is
-    new_id = max_id + 1
+        db_cursor.execute("""
+        INSERT INTO Orders
+            ( metal_id, style_id, size_id )
+        VALUES
+            ( ?, ?, ?);
+        """, (new_order['metal_id'], new_order['style_id'],
+              new_order['size_id'], ))
 
-    # Add an `id` property to the order dictionary
-    order["id"] = new_id
+        id = db_cursor.lastrowid
 
-    # Add the order dictionary to the list
-    ORDERS.append(order)
+        new_order['id'] = id
 
-    # Return the dictionary with `id` property added
-    return order
+    return new_order
 
 def delete_order(id):
     """Deletes a single order

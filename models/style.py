@@ -1,5 +1,5 @@
-class Sizes():
-    """Class that defines the properties of a size object
+class Style():
+    """Class that defines the properties of a style object
     """
 
     def __init__(self, id, style, price):

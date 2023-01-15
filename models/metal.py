@@ -1,4 +1,4 @@
-class Metals():
+class Metal():
     """Class that defines the properties of a metal object
     """
 
